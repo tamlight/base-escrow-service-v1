@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   useAccount, 
   useWriteContract, 
@@ -61,7 +61,7 @@ export default function Home() {
   const [seller, setSeller] = useState('');
   const [amount, setAmount] = useState('');
   
-  const { data: nextId } = useReadContract({
+  const { data: nextId, refetch } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: ABI,
     functionName: 'nextEscrowId',
@@ -71,7 +71,15 @@ export default function Home() {
   });
 
   const { writeContract, data: hash } = useWriteContract();
-  const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  useEffect(() => {
+    if (isSuccess) {
+      refetch();
+      setSeller('');
+      setAmount('');
+    }
+  }, [isSuccess, refetch]);
 
   const handleCreate = async () => {
     if (!seller || !amount) return;
